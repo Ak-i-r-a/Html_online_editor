@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Code Editor with Syntax Highlighting</title>
+    
+    <!-- CodeMirror Styles -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
+
+    <!-- Custom CSS -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            transition: background-color 0.3s, color 0.3s;
+            padding: 2rem;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column; /* Allows the editor and buttons to stack vertically */
+            width: 100%;
+            min-height: 90vh; /* Minimum height */
+            background: rgba(30, 30, 30, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem; /* Reduces space under the header */
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .editor-container {
+            flex-grow: 1; /* Allows the editor to take all remaining space */
+            overflow-y: auto; /* Allows vertical scrolling if necessary */
+        }
+
+        button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            color: white;
+            background-color: rgba(0,122,204,0.8);
+            border: none;
+            border-radius: 8px;
+        }
+
+        button:hover {
+            background-color: rgba(0,122,204,1);
+        }
+
+        /* Positioning of the theme toggle button */
+        #themeToggle {
+          position: absolute; 
+          top: 20px; 
+          right: 20px; 
+          padding:.75rem; 
+          border-radius:.5rem; 
+          background-color : rgba(255,255,255,.1);
+          z-index: 10; /* Ensures the button is above other elements */
+        }
+
+        /* Positioning of the buttons */
+        .button-container {
+          display: flex; /* Flex to align buttons */
+          gap: 1rem; /* Spacing between buttons */
+          margin-top: auto; /* Pushes buttons to the bottom */
+        }
+
+        /* Light theme */
+        body.light-theme {
+          background-color : #f0f0f0; 
+          color : #333; 
+        }
+        
+        body.light-theme .container { 
+          background : rgba(255,255,255,.8); 
+          border-color : rgba(0,0,0,.1); 
+        }
+        
+        body.light-theme h1 { 
+          color : #333; 
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="editor-header">
+            <h1>HTML Code Editor</h1>
+            
+            <!-- Theme toggle button -->
+            <button id="themeToggle"><i class="ri-contrast-2-line"></i></button>
+            
+        </div>
+        
+        <div class="editor-container">
+           <textarea id="codeEditor"></textarea>
+        </div>
+        
+        <!-- Button container positioned at the bottom -->
+        <div class="button-container">
+           <button onclick="openPreview()"><i class="ri-eye-line"></i>Open Preview</button>
+           <button onclick="copyCode()"><i class="ri-file-copy-line"></i>Copy Code</button>
+       </div>
+    </div>
+
+    <!-- CodeMirror Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+
+    <script>
+      let editor;
+
+      document.addEventListener('DOMContentLoaded', (event) => {
+          editor = CodeMirror.fromTextArea(document.getElementById("codeEditor"), {
+              mode: "htmlmixed",
+              theme: "dracula",
+              lineNumbers: true,
+              autoCloseBrackets: true,
+              matchBrackets: true,
+              indentUnit: 4,
+              tabSize: 4,
+              indentWithTabs:true,
+              viewportMargin: Infinity,
+              scrollbarStyle: "null"
+          });
+
+          // Dynamic adjustment of CodeMirror size
+          function adjustEditorSize() {
+              const containerHeight = document.querySelector('.editor-container').clientHeight - document.querySelector('.editor-header').offsetHeight - document.querySelector('.button-container').offsetHeight - 20; // Maximum height
+              editor.setSize(null, containerHeight); // Adjusts the size of CodeMirror
+          }
+
+          adjustEditorSize(); // Adjust size on initial load
+
+          window.addEventListener('resize', adjustEditorSize); // Adjust size on window resize
+
+          editor.on("change", adjustEditorSize); // Adjust size on content change
+      });
+
+      function openPreview() {
+          const code = editor.getValue();
+          const fullHTML = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Preview</title></head><body>${code}</body></html>`;
+          const previewWindow = window.open();
+          previewWindow.document.write(fullHTML);
+          previewWindow.document.close();
+      }
+
+      function copyCode() {
+          const code = editor.getValue();
+          navigator.clipboard.writeText(code).then(() => {
+              console.log('Code copied to clipboard.');
+          }).catch(err => {
+              console.error('Error copying code:', err);
+          });
+      }
+
+      const themeToggle = document.getElementById('themeToggle');
+      
+      themeToggle.addEventListener('click', () => {
+          document.body.classList.toggle('light-theme');
+          editor.setOption('theme', document.body.classList.contains('light-theme') ? 'default' : 'dracula');
+      });
+    </script>
+</body>
+</html>
